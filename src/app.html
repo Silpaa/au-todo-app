@@ -1,0 +1,28 @@
+<template>
+  <require from="../styles/styles.css"></require>
+  <h1>${appName}</h1>
+  <form method="post" submit.trigger="addTodo()">
+    <input type="text" placeholder="What would you like to do?" value.bind="todoTitle">
+    <button type="submit">Add</button>
+  </form>
+  <div>
+    <a href="#" click.trigger="filterTodos('all')">All</a>
+    <a href="#" click.trigger="filterTodos('active')">Active</a>
+    <a href="#" click.trigger="filterTodos('completed')">Completed</a>
+  </div>
+  <div>
+    <button disabled.bind="allTodosCount === 0" click.trigger="removeAllTodos()"> Remove All</button>
+    <button disabled.bind="completedTodoCount === 0" click.trigger="removeCompletedTodos()"> Remove Completed</button>
+    <button disabled.bind="allTodosCount === 0" click.trigger="toggleAllTodos()"> Toggle All</button>
+    <button disabled.bind="allTodosCount === 0" click.trigger="completeAllTodos()"> Complete All</button>
+  </div>
+  <ul>
+    <li repeat.for="t of todos">
+      <input type="checkbox" checked.bind="t.completed" />
+      <input show.bind="t.editMode" type="text" value.bind="t.title"/>
+      <span show.two-way="!t.editMode" click.trigger="updateTodo(t)" class.bind="t.completed ? 'strikeout': ''">${t.id} -${t.title}</span>
+      <button type="button" click.trigger="removeTodo(t)">Remove</button>
+      <button type="button" click.trigger="updateTodo(t)">${t.editMode ? 'Update' : 'Edit'}</button>
+    </li>
+  </ul>
+</template>
