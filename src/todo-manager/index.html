@@ -1,0 +1,52 @@
+<template>
+  <require from='../resources/elements/todo-add'></require>
+  <require from='../resources/elements/todo-filter'></require>
+  <require from='../resources/elements/todo-action'></require>  
+  <require from='../resources/elements/todo-list'></require>
+  
+  <div class="container">
+    <div class="row">
+      <div class="col m12">
+        <h2 class="center-align">${appName}</h2>
+        <div class="row" if.bind="token">
+          <div class="col m12">                              
+              <p class="right-align">
+                  <button class="btn btn-large waves-effect waves-light" type="button" name="btn_logout" click.trigger="signout()"><i class="material-icons left">arrow_back</i>Logout</button>
+              </p>
+          </div> 
+        </div>
+        <div class="row">
+          <div class="col m12">
+            <todo-add todo-title.bind='todoTitle' todo-completed.bind='todoCompleted' add-callback.call='addTodo($event)' ></todo-add>
+            <todo-filter all-todos-count.bind='allTodosCount'
+                active-todos-count.bind='activeTodosCount' 
+                completed-todos-count.bind='completedTodosCount'
+                active-filter.bind='activeFilter' 
+                filter-todos-callback.call='filterTodos($event)'></todo-filter>
+            <br/>
+            <todo-action all-todos-count.bind='allTodosCount' 
+              completed-todos-count.bind='completedTodosCount'
+              remove-all-todos-callback.call='removeAllTodos()'
+              remove-completed-todos-callback.call='removeCompletedTodos()'
+              toggle-all-todos-callback.call='toggleAllTodos()'
+              complete-all-todos-callback.call='completeAllTodos()'
+            ></todo-action>
+            <br/>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col m8 z-depth-5">
+            <todo-list todos.bind='todos' host.bind='self'
+              remove-callback.call='removeTodo($event)'
+              update-callback.call='updateTodo($event)'
+              cancel-edit-callback.call='cancelEditTodo($event)'
+              ></todo-list>
+          </div>
+          <div class="col m4 z-depth-5">
+            <router-view></router-view>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

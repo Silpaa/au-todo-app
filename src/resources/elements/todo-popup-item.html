@@ -7,7 +7,8 @@
       <i class="small left material-icons">list</i>
     </div>
     <div class="input-field col s5" show.bind="!todo.editMode">
-      <input type="checkbox" checked.bind='todo.completed' id="id_${todo.id}" />
+      <input type="checkbox" checked.bind='todo.completed' id="id_${todo.id}"
+        click.trigger="toggleCompleted(todo)" />
       <label for="id_${todo.id}"><span show.two-way="!todo.editMode" 
         click.delegate="updateCallback(todo)" 
         class.bind="todo.completed ? 'red-text strikeout' : 'green-text'">${todo.id} - ${todo.title}</span>
@@ -20,14 +21,10 @@
         keyup-esc.call="cancelEditCallback(todo)"/>
     </div>
     <div class="input-field col s6">
-      <button type="button" click.delegate="removeCallback(todo)"class="btn btn-medium waves-effect waves-light red">
+      <button type="button" click.delegate="removeCallback(todo)"class="modal-action modal-close btn btn-medium waves-effect waves-light red">
                 <i class="medium material-icons">delete</i>Remove </button>
-      <button type="button" click.delegate="updateCallback(todo)" class="btn btn-medium waves-effect waves-light blue">
+      <button type="button" click.delegate="updateCallback(todo)" class="modal-action modal-close btn btn-medium waves-effect waves-light blue">
                 <i class="medium material-icons">edit</i>${todo.editMode ? 'Update' : 'Edit'}</button>
-      <a route-href="route: todos-detail-id; params.bind: {id: todo.id}" click.delegate="updateSingleDetail(todo)" class="btn btn-medium waves-effect waves-light blue">
-                <i class="medium material-icons">edit</i>${todo.editMode ? 'Update detail' : 'Edit detail'}</a>          
-      <button type="button" click.delegate="updateSingleInNewPage(todo)" class="btn btn-medium waves-effect waves-light blue">
-                <i class="medium material-icons">edit</i>${todo.editMode ? 'Update in New Page' : 'Edit in New Page'}</button>
     </div>
   </div>
 <template>

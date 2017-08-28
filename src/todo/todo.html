@@ -1,0 +1,19 @@
+<template>
+    <require from='../resources/elements/todo-popup-item'></require>
+    <div class="container">
+      <div class="row">
+        <div class="col m8 offset-m2">
+          <h2 class="center-align">Todo</h2>
+            <todo-popup-item todo.bind='todo'
+              remove-callback.call="remove($event)"
+              update-callback.call="update($event)"
+              cancel-edit-callback.call="cancel($event)">
+            </todo-popup-item>
+            <center>
+              <button type="button" click.delegate="backToList()" class="btn btn-medium waves-effect waves-light blue">
+                  Back to List</button>
+            </center>
+        </div>
+      </div>
+    </div>
+</template>

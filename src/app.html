@@ -1,16 +1,17 @@
 <template>
-  <require from="../styles/styles.css"></require>
+  <require from="../style/styles.css"></require>
   <require from="./resources/attributes/auto-focus"></require>
   <h1>${appName}</h1>
   <form method="post" submit.trigger="addTodo()">
-    <input type="text" placeholder="What would you like to do?" value.bind="todoTitle" auto-focus>
-    <button type="submit">Add</button>
+      <input type="text" placeholder="What would you like to do?" value.bind="todoTitle"
+        >
+      <button type="submit" auto-focus>Add</button>
   </form>
-  <br><br/>
+  <br/><br/>
   <div>
-    <a href="#" click.trigger="filterTodos('all')">All</a>
-    <a href="#" click.trigger="filterTodos('active')">Active</a>
-    <a href="#" click.trigger="filterTodos('completed')">Completed</a>
+      <a href="#" click.trigger="filterTodos('all')">All</a> |
+      <a href="#" click.trigger="filterTodos('active')">Active</a> |
+      <a href="#" click.trigger="filterTodos('completed')">Completed</a>
   </div>
   <div>
     <strong>${allTodosCount}</strong>${allTodosCount === 1 ? ' task ': ' tasks '} | 
@@ -19,18 +20,18 @@
   </div>
   <br/>
   <div>
-    <button disabled.bind="allTodosCount === 0" click.trigger="removeAllTodos()"> Remove All</button>
-    <button disabled.bind="completedTodosCount === 0" click.trigger="removeCompletedTodos()"> Remove Completed</button>
-    <button disabled.bind="allTodosCount === 0" click.trigger="toggleAllTodos()"> Toggle All</button>
-    <button disabled.bind="allTodosCount === 0" click.trigger="completeAllTodos()"> Complete All</button>
-  </div>
+      <button disabled.bind="allTodosCount === 0" click.trigger="removeAllTodos()">Remove All</button>
+      <button disabled.bind="completedTodosCount === 0" click.trigger="removeCompletedTodos()">Remove Completed</button>
+      <button disabled.bind="allTodosCount === 0" click.trigger="toggleAllTodos()">Toggle All</button>
+      <button disabled.bind="allTodosCount === 0" click.trigger="completeAllTodos()">Complete All</button>
+    </div>
   <ul>
-    <li repeat.for="t of todos">
-      <input type="checkbox" checked.bind="t.completed" />
-      <input show.bind="t.editMode" type="text" value.bind="t.title"/>
-      <span show.two-way="!t.editMode" click.trigger="updateTodo(t)" class.bind="t.completed ? 'strikeout': ''">${t.id} -${t.title}</span>
-      <button type="button" click.trigger="removeTodo(t)">Remove</button>
-      <button type="button" click.trigger="updateTodo(t)">${t.editMode ? 'Update' : 'Edit'}</button>
-    </li>
-  </ul>
+      <li repeat.for="t of todos">
+        <input type="checkbox" checked.bind='t.completed' />
+        <input show.bind="t.editMode" type="text" value.bind="t.title" />
+        <span show.two-way="!t.editMode" click.trigger="updateTodo(t)" class.bind="t.completed ? 'strikeout' : ''">${t.id} - ${t.title}</span>
+        <button type="button" click.trigger="removeTodo(t)">Remove</button>
+        <button type="button" click.trigger="updateTodo(t)">${t.editMode ? 'Update' : 'Edit'}</button>
+      </li>
+    </ul>
 </template>

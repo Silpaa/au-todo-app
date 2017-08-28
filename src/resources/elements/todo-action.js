@@ -9,4 +9,3 @@ export class TodoAction {
   @bindable toggleAllTodosCallback;
   @bindable completeAllTodosCallback;
 }
-

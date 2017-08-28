@@ -1,8 +1,24 @@
 <template>
-  <div>
+  <div class="row">
+    <nav>
+      <div class="nav-wrapper">            
+        <ul id="nav-mobile" class="left">
+          <li><a href="#" disabled.bind="allTodosCount === 0" click.trigger="removeAllTodosCallback()">
+          Remove All</a></li>
+          <li><a href="#" disabled.bind="completedTodosCount === 0" click.trigger="removeCompletedTodosCallback()">
+          Remove Completed</a></li>
+          <li><a href="#" disabled.bind="allTodosCount === 0" click.trigger="toggleAllTodosCallback()">
+          Toggle All</a></li>
+          <li><a href="#" disabled.bind="allTodosCount === 0" click.trigger="completeAllTodosCallback()">
+          Complete All</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+  <!--<div>
     <button disabled.bind="allTodosCount === 0" click.trigger="removeAllTodosCallback()">Remove All</button>
     <button disabled.bind="completedTodosCount === 0" click.trigger="removeCompletedTodosCallback()">Remove Completed</button>
     <button disabled.bind="allTodosCount === 0" click.trigger="toggleAllTodosCallback()">Toggle All</button>
     <button disabled.bind="allTodosCount === 0" click.trigger="completeAllTodosCallback()">Complete All</button>
-  </div>
+  </div>-->
 </template>

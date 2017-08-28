@@ -1,23 +1,22 @@
 import {inject, customAttribute, bindingMode, TaskQueue} from 'aurelia-framework';
 
-@inject(Element,TaskQueue)
-@customAttribute('auto-focus',bindingMode.twoWay)
+@inject(Element, TaskQueue)
+@customAttribute('auto-focus', bindingMode.twoWay)
 export class AutoFocusCustomAttribute {
   constructor(element, taskQueue) {
     this.element = element;
     this.taskQueue = taskQueue;
   }
 
-  giveFocus(){
-    this.taskQueue.queueMicroTask(() => {
+  giveFocus() {
+    this.taskQueue.queueMicroTask( () => {
       this.element.focus();
     });
   }
 
-  attached(){
+  attached() {
     this.giveFocus();
   }
-
   valueChanged(newValue, oldValue) {
 
   }

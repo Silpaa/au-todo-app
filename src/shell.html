@@ -1,35 +1,4 @@
 <template>
-    <require from="../styles/styles.css"></require>
-    <require from='./resources/elements/todo-add'></require>
-    <require from='./resources/elements/todo-filter'></require>
-    <require from='./resources/elements/todo-action'></require>  
-    <require from='./resources/elements/todo-list'></require>
-    
-    <div class="container">
-      <div class="row">
-        <div class="col m8 offset-m2">
-          <h2 class="center-align">${appName}</h2>
-          <todo-add todo-title.bind='todoTitle' todo-completed.bind='todoCompleted' add-callback.call='addTodo($event)' ></todo-add>
-    <todo-filter all-todos-count.bind='allTodosCount'
-                active-todos-count.bind='activeTodosCount' 
-                completed-todos-count.bind='completedTodosCount'
-                active-filter.bind='activeFilter' 
-                filter-todos-callback.call='filterTodos($event)'></todo-filter>
-    <br/>
-    <todo-action all-todos-count.bind='allTodosCount' 
-      completed-todos-count.bind='completedTodosCount'
-      remove-all-todos-callback.call='removeAllTodos()'
-      remove-completed-todos-callback.call='removeCompletedTodos()'
-      toggle-all-todos-callback.call='toggleAllTodos()'
-      complete-all-todos-callback.call='completeAllTodos()'
-    ></todo-action>
-    <br/>
-    <todo-list todos.bind='todos' host.bind='self'
-      remove-callback.call='removeTodo($event)'
-      update-callback.call='updateTodo($event)'
-      cancel-edit-callback.call='cancelEditTodo($event)'
-      ></todo-list>
-      </div>
-    </div>
-    </div>
-  </template>  
+  <require from="../styles/styles.css"></require>
+  <router-view></router-view>
+</template>
