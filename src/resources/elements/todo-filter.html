@@ -1,0 +1,12 @@
+<template>
+  <div>
+    <a href="#" click.delegate="filterTodosCallback('all')">All</a> |
+    <a href="#" click.delegate="filterTodosCallback('active')">Active</a> |
+    <a href="#" click.delegate="filterTodosCallback('completed')">Completed</a>
+  </div>
+  <div>
+    <strong>${allTodosCount}</strong>${allTodosCount === 1 ? ' task ': ' tasks '} | 
+    <strong>${activeTodosCount}</strong>${activeTodosCount === 1 ? ' task ': ' tasks '} left |
+    <strong>${completedTodosCount}</strong>${completedTodosCount === 1 ? ' task ': ' tasks '} completed
+  </div>
+</template>

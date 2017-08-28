@@ -1,8 +1,9 @@
 <template>
   <require from="../styles/styles.css"></require>
+  <require from="./resources/attributes/auto-focus"></require>
   <h1>${appName}</h1>
   <form method="post" submit.trigger="addTodo()">
-    <input type="text" placeholder="What would you like to do?" value.bind="todoTitle">
+    <input type="text" placeholder="What would you like to do?" value.bind="todoTitle" auto-focus>
     <button type="submit">Add</button>
   </form>
   <br><br/>

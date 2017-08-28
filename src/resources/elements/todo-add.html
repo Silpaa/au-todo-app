@@ -1,0 +1,12 @@
+<template>
+  <require from='../attributes/auto-focus'></require>
+  <require from='../attributes/keyup-enter'></require>
+  <form method="post">
+      <input type="checkbox" checked.bind="todoCompleted">
+      <input type="text" placeholder="What would you like to do?" 
+        value.bind="todoTitle" 
+        auto-focus
+        keyup-enter.call="addCallback({title: todoTitle, completed: todoCompleted})">
+      <button type="button" click.delegate="addCallback({title: todoTitle, completed: todoCompleted})">Add</button>
+  </form> 
+</template>

@@ -1,0 +1,9 @@
+<template>
+  <require from='./todo-item'></require>
+  <ul>
+      <todo-item repeat.for="todo of todos" todo.bind='todo'
+        remove-callback.call="removeCallback($event)"
+        update-callback.call="updateCallback($event)">
+      </todo-item>
+  </ul>
+</template>

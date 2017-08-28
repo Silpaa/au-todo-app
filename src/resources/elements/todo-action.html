@@ -1,0 +1,8 @@
+<template>
+  <div>
+    <button disabled.bind="allTodosCount === 0" click.trigger="removeAllTodosCallback()">Remove All</button>
+    <button disabled.bind="completedTodosCount === 0" click.trigger="removeCompletedTodosCallback()">Remove Completed</button>
+    <button disabled.bind="allTodosCount === 0" click.trigger="toggleAllTodosCallback()">Toggle All</button>
+    <button disabled.bind="allTodosCount === 0" click.trigger="completeAllTodosCallback()">Complete All</button>
+  </div>
+</template>

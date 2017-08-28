@@ -1,0 +1,9 @@
+<template>
+  <li>
+    <input type="checkbox" checked.bind='todo.completed' />
+    <input show.bind="todo.editMode" type="text" value.bind="todo.title" />
+    <span show.two-way="!todo.editMode" click.delegate="updateCallback(todo)" class.bind="todo.completed ? 'strikeout' : ''">${todo.id} - ${todo.title}</span>
+    <button type="button" click.delegate="removeCallback(todo)">Remove</button>
+    <button type="button" click.delegate="updateCallback(todo)">${todo.editMode ? 'Update' : 'Edit'}</button>
+  </li>
+<template>
