@@ -1,4 +1,4 @@
-export class KeyupEnterCustomAttribute {
+export class KeyupEscCustomAttribute {
   static inject = [Element];
   element;
   value;
@@ -23,3 +23,4 @@ export class KeyupEnterCustomAttribute {
     this.element.removeEventListener('keyup', this.enterPressed);
   }
 }
+

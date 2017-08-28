@@ -1,12 +1,26 @@
 <template>
   <require from='../attributes/auto-focus'></require>
   <require from='../attributes/keyup-enter'></require>
-  <form method="post">
-      <input type="checkbox" checked.bind="todoCompleted">
-      <input type="text" placeholder="What would you like to do?" 
-        value.bind="todoTitle" 
-        auto-focus
-        keyup-enter.call="addCallback({title: todoTitle, completed: todoCompleted})">
-      <button type="button" click.delegate="addCallback({title: todoTitle, completed: todoCompleted})">Add</button>
-  </form> 
+  <div class="row">
+    <!--<form class="col s12" submit.trigger="addCallback({title: todoTitle, completed: todoCompleted})" >-->
+      <div class="row">
+        <div class="input-field col s1">
+          <input type="checkbox" checked.bind="todoCompleted" id="completed">
+          <label for="completed"></label>
+        </div>
+        <div class="input-field col s11">
+            <input type="text" value.bind="todoTitle" auto-focus placeholder="what needs to be done?"
+            keyup-enter.call="addCallback({title: todoTitle, completed: todoCompleted})">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col m12">                              
+            <p class="right-align">
+                <button class="btn btn-large waves-effect waves-light" type="button" name="action"
+                click.delegate="addCallback({title: todoTitle, completed: todoCompleted})"><i class="material-icons left">add</i>Add</button>
+            </p>
+        </div>
+      </div>
+    <!--</form>-->
+  </div>
 </template>

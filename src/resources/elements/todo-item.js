@@ -5,7 +5,7 @@ export class TodoItem {
   @bindable todo;
   @bindable removeCallback;
   @bindable updateCallback;
+  @bindable cancelEditCallback;
   attached() {
   }
 }
-

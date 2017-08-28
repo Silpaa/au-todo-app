@@ -192,6 +192,164 @@ define('main',['exports', './environment'], function (exports, _environment) {
     });
   }
 });
+define('shell',['exports', './models/todo', './services/inmemory-todo-promise-service'], function (exports, _todo, _inmemoryTodoPromiseService) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.Shell = undefined;
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  var _createClass = function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+
+    return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);
+      if (staticProps) defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  }();
+
+  var Shell = exports.Shell = function () {
+    function Shell() {
+      _classCallCheck(this, Shell);
+
+      this.appName = 'Todo List';
+      this.self = this;
+      this.todoTitle = '';
+      this.previousTitle = '';
+      this.todoCompleted = false;
+      this.activeFilter = 'all';
+      this.todoService = new _inmemoryTodoPromiseService.InMemoryTodoPromiseService();
+      this.filterTodos(this.activeFilter);
+    }
+
+    Shell.prototype.filterTodos = function filterTodos(filterCriteria) {
+      this.activeFilter = filterCriteria;
+      this.todos = this.todoService.filterTodosSync(this.activeFilter);
+    };
+
+    Shell.prototype.addTodo = function addTodo(todo) {
+      var _this = this;
+
+      this.todoService.addTodo(new _todo.Todo(todo.title, todo.completed)).then(function (addedTodo) {
+        _this.todoTitle = '';
+        console.log(addedTodo);
+        _this.todoService.filterTodos(_this.activeFilter).then(function (todos) {
+          _this.todos = todos;
+        });
+      });
+    };
+
+    Shell.prototype.removeTodo = function removeTodo(todo) {
+      var _this2 = this;
+
+      this.todoService.deleteTodoById(todo.id).then(function (deletedTodo) {
+        console.log(deletedTodo);
+        _this2.todoService.filterTodos(_this2.activeFilter).then(function (todos) {
+          _this2.todos = todos;
+        });
+      }).catch(function (error) {
+        console.log('ERROR: ' + error);
+      });
+    };
+
+    Shell.prototype.updateTodo = function updateTodo(todo) {
+      if (todo.editMode) {
+        todo.editMode = false;
+        this.todoService.updateTodoById(todo.id, todo);
+      } else {
+        this.previousTitle = todo.title;
+        todo.editMode = true;
+      }
+    };
+
+    Shell.prototype.cancelEditTodo = function cancelEditTodo(todo) {
+      todo.title = this.previousTitle;
+      todo.editMode = false;
+    };
+
+    Shell.prototype.checkIfAllTodosAreCompleted = function checkIfAllTodosAreCompleted() {
+      return this.todos.every(function (todo) {
+        return todo.completed;
+      });
+    };
+
+    Shell.prototype.toggleAllTodos = function toggleAllTodos() {
+      var _this3 = this;
+
+      this.todoService.toggleAllTodos().then(function (result) {
+        if (result) {
+          _this3.filterTodos(_this3.activeFilter);
+        }
+      });
+    };
+
+    Shell.prototype.completeAllTodos = function completeAllTodos() {
+      var _this4 = this;
+
+      this.todoService.completeAllTodos().then(function (result) {
+        if (result) {
+          _this4.checkIfAllTodosAreCompleted();
+          _this4.filterTodos(_this4.activeFilter);
+        }
+      });
+    };
+
+    Shell.prototype.removeAllTodos = function removeAllTodos() {
+      var _this5 = this;
+
+      this.todoService.removeAllTodos().then(function (result) {
+        if (result) {
+          _this5.filterTodos(_this5.activeFilter);
+        }
+      });
+    };
+
+    Shell.prototype.removeCompletedTodos = function removeCompletedTodos() {
+      var _this6 = this;
+
+      this.todoService.removeCompletedTodos().then(function (result) {
+        if (result) {
+          _this6.filterTodos(_this6.activeFilter);
+        }
+      });
+    };
+
+    _createClass(Shell, [{
+      key: 'allTodosCount',
+      get: function get() {
+        return this.todoService.filterTodosSync('all').length;
+      }
+    }, {
+      key: 'activeTodosCount',
+      get: function get() {
+        return this.todoService.filterTodosSync('active').length;
+      }
+    }, {
+      key: 'completedTodosCount',
+      get: function get() {
+        return this.todoService.filterTodosSync('completed').length;
+      }
+    }]);
+
+    return Shell;
+  }();
+});
 define('models/todo',['exports', '../utilities/idgenerators'], function (exports, _idgenerators) {
     'use strict';
 
@@ -663,11 +821,11 @@ define('resources/attributes/keyup-esc',['exports'], function (exports) {
 
   var _class, _temp;
 
-  var KeyupEnterCustomAttribute = exports.KeyupEnterCustomAttribute = (_temp = _class = function () {
-    function KeyupEnterCustomAttribute(element) {
+  var KeyupEscCustomAttribute = exports.KeyupEscCustomAttribute = (_temp = _class = function () {
+    function KeyupEscCustomAttribute(element) {
       var _this = this;
 
-      _classCallCheck(this, KeyupEnterCustomAttribute);
+      _classCallCheck(this, KeyupEscCustomAttribute);
 
       this.element = element;
 
@@ -679,24 +837,34 @@ define('resources/attributes/keyup-esc',['exports'], function (exports) {
       };
     }
 
-    KeyupEnterCustomAttribute.prototype.attached = function attached() {
+    KeyupEscCustomAttribute.prototype.attached = function attached() {
       this.element.addEventListener('keyup', this.enterPressed);
     };
 
-    KeyupEnterCustomAttribute.prototype.detached = function detached() {
+    KeyupEscCustomAttribute.prototype.detached = function detached() {
       this.element.removeEventListener('keyup', this.enterPressed);
     };
 
-    return KeyupEnterCustomAttribute;
+    return KeyupEscCustomAttribute;
   }(), _class.inject = [Element], _temp);
 });
-define('shell',['exports', './models/todo', './services/inmemory-todo-promise-service'], function (exports, _todo, _inmemoryTodoPromiseService) {
+define('resources/elements/todo-action',['exports', 'aurelia-framework'], function (exports, _aureliaFramework) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.Shell = undefined;
+  exports.TodoAction = undefined;
+
+  function _initDefineProp(target, property, descriptor, context) {
+    if (!descriptor) return;
+    Object.defineProperty(target, property, {
+      enumerable: descriptor.enumerable,
+      configurable: descriptor.configurable,
+      writable: descriptor.writable,
+      value: descriptor.initializer ? descriptor.initializer.call(context) : void 0
+    });
+  }
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -704,143 +872,74 @@ define('shell',['exports', './models/todo', './services/inmemory-todo-promise-se
     }
   }
 
-  var _createClass = function () {
-    function defineProperties(target, props) {
-      for (var i = 0; i < props.length; i++) {
-        var descriptor = props[i];
-        descriptor.enumerable = descriptor.enumerable || false;
-        descriptor.configurable = true;
-        if ("value" in descriptor) descriptor.writable = true;
-        Object.defineProperty(target, descriptor.key, descriptor);
-      }
+  function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
+    var desc = {};
+    Object['ke' + 'ys'](descriptor).forEach(function (key) {
+      desc[key] = descriptor[key];
+    });
+    desc.enumerable = !!desc.enumerable;
+    desc.configurable = !!desc.configurable;
+
+    if ('value' in desc || desc.initializer) {
+      desc.writable = true;
     }
 
-    return function (Constructor, protoProps, staticProps) {
-      if (protoProps) defineProperties(Constructor.prototype, protoProps);
-      if (staticProps) defineProperties(Constructor, staticProps);
-      return Constructor;
-    };
-  }();
+    desc = decorators.slice().reverse().reduce(function (desc, decorator) {
+      return decorator(target, property, desc) || desc;
+    }, desc);
 
-  var Shell = exports.Shell = function () {
-    function Shell() {
-      _classCallCheck(this, Shell);
-
-      this.appName = 'Todo List';
-      this.self = this;
-      this.todoTitle = '';
-      this.todoCompleted = false;
-      this.activeFilter = 'all';
-      this.todoService = new _inmemoryTodoPromiseService.InMemoryTodoPromiseService();
-      this.filterTodos(this.activeFilter);
+    if (context && desc.initializer !== void 0) {
+      desc.value = desc.initializer ? desc.initializer.call(context) : void 0;
+      desc.initializer = undefined;
     }
 
-    Shell.prototype.filterTodos = function filterTodos(filterCriteria) {
-      this.activeFilter = filterCriteria;
-      this.todos = this.todoService.filterTodosSync(this.activeFilter);
-    };
+    if (desc.initializer === void 0) {
+      Object['define' + 'Property'](target, property, desc);
+      desc = null;
+    }
 
-    Shell.prototype.addTodo = function addTodo(todo) {
-      var _this = this;
+    return desc;
+  }
 
-      this.todoService.addTodo(new _todo.Todo(todo.title, todo.completed)).then(function (addedTodo) {
-        _this.todoTitle = '';
-        todo.title = '';
-        console.log(addedTodo);
-        _this.todoService.filterTodos(_this.activeFilter).then(function (todos) {
-          _this.todos = todos;
-        });
-      });
-    };
+  function _initializerWarningHelper(descriptor, context) {
+    throw new Error('Decorating class property failed. Please ensure that transform-class-properties is enabled.');
+  }
 
-    Shell.prototype.removeTodo = function removeTodo(todo) {
-      var _this2 = this;
+  var _dec, _dec2, _dec3, _class, _desc, _value, _class2, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5, _descriptor6;
 
-      this.todoService.deleteTodoById(todo.id).then(function (deletedTodo) {
-        console.log(deletedTodo);
-        _this2.todoService.filterTodos(_this2.activeFilter).then(function (todos) {
-          _this2.todos = todos;
-        });
-      }).catch(function (error) {
-        console.log('ERROR: ' + error);
-      });
-    };
+  var TodoAction = exports.TodoAction = (_dec = (0, _aureliaFramework.customElement)('todo-action'), _dec2 = (0, _aureliaFramework.bindable)({ defaultBindingMode: _aureliaFramework.bindingMode.twoWay }), _dec3 = (0, _aureliaFramework.bindable)({ defaultBindingMode: _aureliaFramework.bindingMode.twoWay }), _dec(_class = (_class2 = function TodoAction() {
+    _classCallCheck(this, TodoAction);
 
-    Shell.prototype.updateTodo = function updateTodo(todo) {
-      if (todo.editMode) {
-        todo.editMode = false;
-        this.todoService.updateTodoById(todo.id, todo);
-      } else {
-        todo.editMode = true;
-      }
-    };
+    _initDefineProp(this, 'allTodosCount', _descriptor, this);
 
-    Shell.prototype.checkIfAllTodosAreCompleted = function checkIfAllTodosAreCompleted() {
-      return this.todos.every(function (todo) {
-        return todo.completed;
-      });
-    };
+    _initDefineProp(this, 'completedTodosCount', _descriptor2, this);
 
-    Shell.prototype.toggleAllTodos = function toggleAllTodos() {
-      var _this3 = this;
+    _initDefineProp(this, 'removeAllTodosCallback', _descriptor3, this);
 
-      this.todoService.toggleAllTodos().then(function (result) {
-        if (result) {
-          _this3.filterTodos(_this3.activeFilter);
-        }
-      });
-    };
+    _initDefineProp(this, 'removeCompletedTodosCallback', _descriptor4, this);
 
-    Shell.prototype.completeAllTodos = function completeAllTodos() {
-      var _this4 = this;
+    _initDefineProp(this, 'toggleAllTodosCallback', _descriptor5, this);
 
-      this.todoService.completeAllTodos().then(function (result) {
-        if (result) {
-          _this4.checkIfAllTodosAreCompleted();
-          _this4.filterTodos(_this4.activeFilter);
-        }
-      });
-    };
-
-    Shell.prototype.removeAllTodos = function removeAllTodos() {
-      var _this5 = this;
-
-      this.todoService.removeAllTodos().then(function (result) {
-        if (result) {
-          _this5.filterTodos(_this5.activeFilter);
-        }
-      });
-    };
-
-    Shell.prototype.removeCompletedTodos = function removeCompletedTodos() {
-      var _this6 = this;
-
-      this.todoService.removeCompletedTodos().then(function (result) {
-        if (result) {
-          _this6.filterTodos(_this6.activeFilter);
-        }
-      });
-    };
-
-    _createClass(Shell, [{
-      key: 'allTodosCount',
-      get: function get() {
-        return this.todoService.filterTodosSync('all').length;
-      }
-    }, {
-      key: 'activeTodosCount',
-      get: function get() {
-        return this.todoService.filterTodosSync('active').length;
-      }
-    }, {
-      key: 'completedTodosCount',
-      get: function get() {
-        return this.todoService.filterTodosSync('completed').length;
-      }
-    }]);
-
-    return Shell;
-  }();
+    _initDefineProp(this, 'completeAllTodosCallback', _descriptor6, this);
+  }, (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'allTodosCount', [_dec2], {
+    enumerable: true,
+    initializer: null
+  }), _descriptor2 = _applyDecoratedDescriptor(_class2.prototype, 'completedTodosCount', [_dec3], {
+    enumerable: true,
+    initializer: null
+  }), _descriptor3 = _applyDecoratedDescriptor(_class2.prototype, 'removeAllTodosCallback', [_aureliaFramework.bindable], {
+    enumerable: true,
+    initializer: null
+  }), _descriptor4 = _applyDecoratedDescriptor(_class2.prototype, 'removeCompletedTodosCallback', [_aureliaFramework.bindable], {
+    enumerable: true,
+    initializer: null
+  }), _descriptor5 = _applyDecoratedDescriptor(_class2.prototype, 'toggleAllTodosCallback', [_aureliaFramework.bindable], {
+    enumerable: true,
+    initializer: null
+  }), _descriptor6 = _applyDecoratedDescriptor(_class2.prototype, 'completeAllTodosCallback', [_aureliaFramework.bindable], {
+    enumerable: true,
+    initializer: null
+  })), _class2)) || _class);
 });
 define('resources/elements/todo-add',['exports', 'aurelia-framework'], function (exports, _aureliaFramework) {
   'use strict';
@@ -1008,99 +1107,6 @@ define('resources/elements/todo-filter',['exports', 'aurelia-framework'], functi
     initializer: null
   })), _class2)) || _class);
 });
-define('resources/elements/todo-action',['exports', 'aurelia-framework'], function (exports, _aureliaFramework) {
-  'use strict';
-
-  Object.defineProperty(exports, "__esModule", {
-    value: true
-  });
-  exports.TodoAction = undefined;
-
-  function _initDefineProp(target, property, descriptor, context) {
-    if (!descriptor) return;
-    Object.defineProperty(target, property, {
-      enumerable: descriptor.enumerable,
-      configurable: descriptor.configurable,
-      writable: descriptor.writable,
-      value: descriptor.initializer ? descriptor.initializer.call(context) : void 0
-    });
-  }
-
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
-
-  function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
-    var desc = {};
-    Object['ke' + 'ys'](descriptor).forEach(function (key) {
-      desc[key] = descriptor[key];
-    });
-    desc.enumerable = !!desc.enumerable;
-    desc.configurable = !!desc.configurable;
-
-    if ('value' in desc || desc.initializer) {
-      desc.writable = true;
-    }
-
-    desc = decorators.slice().reverse().reduce(function (desc, decorator) {
-      return decorator(target, property, desc) || desc;
-    }, desc);
-
-    if (context && desc.initializer !== void 0) {
-      desc.value = desc.initializer ? desc.initializer.call(context) : void 0;
-      desc.initializer = undefined;
-    }
-
-    if (desc.initializer === void 0) {
-      Object['define' + 'Property'](target, property, desc);
-      desc = null;
-    }
-
-    return desc;
-  }
-
-  function _initializerWarningHelper(descriptor, context) {
-    throw new Error('Decorating class property failed. Please ensure that transform-class-properties is enabled.');
-  }
-
-  var _dec, _dec2, _dec3, _class, _desc, _value, _class2, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5, _descriptor6;
-
-  var TodoAction = exports.TodoAction = (_dec = (0, _aureliaFramework.customElement)('todo-action'), _dec2 = (0, _aureliaFramework.bindable)({ defaultBindingMode: _aureliaFramework.bindingMode.twoWay }), _dec3 = (0, _aureliaFramework.bindable)({ defaultBindingMode: _aureliaFramework.bindingMode.twoWay }), _dec(_class = (_class2 = function TodoAction() {
-    _classCallCheck(this, TodoAction);
-
-    _initDefineProp(this, 'allTodosCount', _descriptor, this);
-
-    _initDefineProp(this, 'completedTodosCount', _descriptor2, this);
-
-    _initDefineProp(this, 'removeAllTodosCallback', _descriptor3, this);
-
-    _initDefineProp(this, 'removeCompletedTodosCallback', _descriptor4, this);
-
-    _initDefineProp(this, 'toggleAllTodosCallback', _descriptor5, this);
-
-    _initDefineProp(this, 'completeAllTodosCallback', _descriptor6, this);
-  }, (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'allTodosCount', [_dec2], {
-    enumerable: true,
-    initializer: null
-  }), _descriptor2 = _applyDecoratedDescriptor(_class2.prototype, 'completedTodosCount', [_dec3], {
-    enumerable: true,
-    initializer: null
-  }), _descriptor3 = _applyDecoratedDescriptor(_class2.prototype, 'removeAllTodosCallback', [_aureliaFramework.bindable], {
-    enumerable: true,
-    initializer: null
-  }), _descriptor4 = _applyDecoratedDescriptor(_class2.prototype, 'removeCompletedTodosCallback', [_aureliaFramework.bindable], {
-    enumerable: true,
-    initializer: null
-  }), _descriptor5 = _applyDecoratedDescriptor(_class2.prototype, 'toggleAllTodosCallback', [_aureliaFramework.bindable], {
-    enumerable: true,
-    initializer: null
-  }), _descriptor6 = _applyDecoratedDescriptor(_class2.prototype, 'completeAllTodosCallback', [_aureliaFramework.bindable], {
-    enumerable: true,
-    initializer: null
-  })), _class2)) || _class);
-});
 define('resources/elements/todo-item',['exports', 'aurelia-framework'], function (exports, _aureliaFramework) {
   'use strict';
 
@@ -1158,7 +1164,7 @@ define('resources/elements/todo-item',['exports', 'aurelia-framework'], function
     throw new Error('Decorating class property failed. Please ensure that transform-class-properties is enabled.');
   }
 
-  var _dec, _class, _desc, _value, _class2, _descriptor, _descriptor2, _descriptor3;
+  var _dec, _class, _desc, _value, _class2, _descriptor, _descriptor2, _descriptor3, _descriptor4;
 
   var TodoItem = exports.TodoItem = (_dec = (0, _aureliaFramework.customElement)('todo-item'), _dec(_class = (_class2 = function () {
     function TodoItem() {
@@ -1169,6 +1175,8 @@ define('resources/elements/todo-item',['exports', 'aurelia-framework'], function
       _initDefineProp(this, 'removeCallback', _descriptor2, this);
 
       _initDefineProp(this, 'updateCallback', _descriptor3, this);
+
+      _initDefineProp(this, 'cancelEditCallback', _descriptor4, this);
     }
 
     TodoItem.prototype.attached = function attached() {};
@@ -1181,6 +1189,9 @@ define('resources/elements/todo-item',['exports', 'aurelia-framework'], function
     enumerable: true,
     initializer: null
   }), _descriptor3 = _applyDecoratedDescriptor(_class2.prototype, 'updateCallback', [_aureliaFramework.bindable], {
+    enumerable: true,
+    initializer: null
+  }), _descriptor4 = _applyDecoratedDescriptor(_class2.prototype, 'cancelEditCallback', [_aureliaFramework.bindable], {
     enumerable: true,
     initializer: null
   })), _class2)) || _class);
@@ -1242,7 +1253,7 @@ define('resources/elements/todo-list',['exports', 'aurelia-framework'], function
     throw new Error('Decorating class property failed. Please ensure that transform-class-properties is enabled.');
   }
 
-  var _dec, _class, _desc, _value, _class2, _descriptor, _descriptor2, _descriptor3, _descriptor4;
+  var _dec, _class, _desc, _value, _class2, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5;
 
   var TodoList = exports.TodoList = (_dec = (0, _aureliaFramework.customElement)('todo-list'), _dec(_class = (_class2 = function () {
     function TodoList() {
@@ -1255,6 +1266,8 @@ define('resources/elements/todo-list',['exports', 'aurelia-framework'], function
       _initDefineProp(this, 'removeCallback', _descriptor3, this);
 
       _initDefineProp(this, 'updateCallback', _descriptor4, this);
+
+      _initDefineProp(this, 'cancelEditCallback', _descriptor5, this);
     }
 
     TodoList.prototype.activate = function activate() {};
@@ -1280,14 +1293,17 @@ define('resources/elements/todo-list',['exports', 'aurelia-framework'], function
   }), _descriptor4 = _applyDecoratedDescriptor(_class2.prototype, 'updateCallback', [_aureliaFramework.bindable], {
     enumerable: true,
     initializer: null
+  }), _descriptor5 = _applyDecoratedDescriptor(_class2.prototype, 'cancelEditCallback', [_aureliaFramework.bindable], {
+    enumerable: true,
+    initializer: null
   })), _class2)) || _class);
 });
 define('text!app.html', ['module'], function(module) { module.exports = "<template><require from=\"../styles/styles.css\"></require><require from=\"./resources/attributes/auto-focus\"></require><h1>${appName}</h1><form method=\"post\" submit.trigger=\"addTodo()\"><input type=\"text\" placeholder=\"What would you like to do?\" value.bind=\"todoTitle\" auto-focus> <button type=\"submit\">Add</button></form><br><br><div><a href=\"#\" click.trigger=\"filterTodos('all')\">All</a> <a href=\"#\" click.trigger=\"filterTodos('active')\">Active</a> <a href=\"#\" click.trigger=\"filterTodos('completed')\">Completed</a></div><div><strong>${allTodosCount}</strong>${allTodosCount === 1 ? ' task ': ' tasks '} | <strong>${activeTodosCount}</strong>${activeTodosCount === 1 ? ' task ': ' tasks '} left | <strong>${completedTodosCount}</strong>${completedTodosCount === 1 ? ' task ': ' tasks '} completed</div><br><div><button disabled.bind=\"allTodosCount === 0\" click.trigger=\"removeAllTodos()\">Remove All</button> <button disabled.bind=\"completedTodosCount === 0\" click.trigger=\"removeCompletedTodos()\">Remove Completed</button> <button disabled.bind=\"allTodosCount === 0\" click.trigger=\"toggleAllTodos()\">Toggle All</button> <button disabled.bind=\"allTodosCount === 0\" click.trigger=\"completeAllTodos()\">Complete All</button></div><ul><li repeat.for=\"t of todos\"><input type=\"checkbox\" checked.bind=\"t.completed\"> <input show.bind=\"t.editMode\" type=\"text\" value.bind=\"t.title\"> <span show.two-way=\"!t.editMode\" click.trigger=\"updateTodo(t)\" class.bind=\"t.completed ? 'strikeout': ''\">${t.id} -${t.title}</span><button type=\"button\" click.trigger=\"removeTodo(t)\">Remove</button> <button type=\"button\" click.trigger=\"updateTodo(t)\">${t.editMode ? 'Update' : 'Edit'}</button></li></ul></template>"; });
-define('text!../styles/styles.css', ['module'], function(module) { module.exports = "body {\n  font-family: Verdana, Arial;\n  color: blue; }\n\n.strikeout {\n  text-decoration: line-through; }\n\nul {\n  padding-left: 10px; }\n\nli {\n  list-style-type: none; }\n"; });
-define('text!shell.html', ['module'], function(module) { module.exports = "<template><require from=\"../styles/styles.css\"></require><h1>${appName}</h1><require from=\"./resources/elements/todo-add\"></require><require from=\"./resources/elements/todo-filter\"></require><require from=\"./resources/elements/todo-action\"></require><require from=\"./resources/elements/todo-list\"></require><todo-add todo-title.bind=\"todoTitle\" todo-completed.bind=\"todoCompleted\" add-callback.call=\"addTodo($event)\"></todo-add><br><br><todo-filter all-todos-count.bind=\"allTodosCount\" active-todos-count.bind=\"activeTodosCount\" completed-todos-count.bind=\"completedTodosCount\" active-filter.bind=\"activeFilter\" filter-todos-callback.call=\"filterTodos($event)\"></todo-filter><br><todo-action all-todos-count.bind=\"allTodosCount\" completed-todos-count.bind=\"completedTodosCount\" remove-all-todos-callback.call=\"removeAllTodos()\" remove-completed-todos-callback.call=\"removeCompletedTodos()\" toggle-all-todos-callback.call=\"toggleAllTodos()\" complete-all-todos-callback.call=\"completeAllTodos()\"></todo-action><br><todo-list todos.bind=\"todos\" host.bind=\"self\" remove-callback.call=\"removeTodo($event)\" update-callback.call=\"updateTodo($event)\"></todo-list></template>"; });
-define('text!resources/elements/todo-add.html', ['module'], function(module) { module.exports = "<template><require from=\"../attributes/auto-focus\"></require><require from=\"../attributes/keyup-enter\"></require><form method=\"post\"><input type=\"checkbox\" checked.bind=\"todoCompleted\"> <input type=\"text\" placeholder=\"What would you like to do?\" value.bind=\"todoTitle\" auto-focus keyup-enter.call=\"addCallback({title: todoTitle, completed: todoCompleted})\"> <button type=\"button\" click.delegate=\"addCallback({title: todoTitle, completed: todoCompleted})\">Add</button></form></template>"; });
-define('text!resources/elements/todo-filter.html', ['module'], function(module) { module.exports = "<template><div><a href=\"#\" click.delegate=\"filterTodosCallback('all')\">All</a> | <a href=\"#\" click.delegate=\"filterTodosCallback('active')\">Active</a> | <a href=\"#\" click.delegate=\"filterTodosCallback('completed')\">Completed</a></div><div><strong>${allTodosCount}</strong>${allTodosCount === 1 ? ' task ': ' tasks '} | <strong>${activeTodosCount}</strong>${activeTodosCount === 1 ? ' task ': ' tasks '} left | <strong>${completedTodosCount}</strong>${completedTodosCount === 1 ? ' task ': ' tasks '} completed</div></template>"; });
+define('text!../styles/styles.css', ['module'], function(module) { module.exports = ".strikeout {\n  text-decoration: line-through; }\n"; });
+define('text!shell.html', ['module'], function(module) { module.exports = "<template><require from=\"../styles/styles.css\"></require><require from=\"./resources/elements/todo-add\"></require><require from=\"./resources/elements/todo-filter\"></require><require from=\"./resources/elements/todo-action\"></require><require from=\"./resources/elements/todo-list\"></require><div class=\"container\"><div class=\"row\"><div class=\"col m8 offset-m2\"><h2 class=\"center-align\">${appName}</h2><todo-add todo-title.bind=\"todoTitle\" todo-completed.bind=\"todoCompleted\" add-callback.call=\"addTodo($event)\"></todo-add><todo-filter all-todos-count.bind=\"allTodosCount\" active-todos-count.bind=\"activeTodosCount\" completed-todos-count.bind=\"completedTodosCount\" active-filter.bind=\"activeFilter\" filter-todos-callback.call=\"filterTodos($event)\"></todo-filter><br><todo-action all-todos-count.bind=\"allTodosCount\" completed-todos-count.bind=\"completedTodosCount\" remove-all-todos-callback.call=\"removeAllTodos()\" remove-completed-todos-callback.call=\"removeCompletedTodos()\" toggle-all-todos-callback.call=\"toggleAllTodos()\" complete-all-todos-callback.call=\"completeAllTodos()\"></todo-action><br><todo-list todos.bind=\"todos\" host.bind=\"self\" remove-callback.call=\"removeTodo($event)\" update-callback.call=\"updateTodo($event)\" cancel-edit-callback.call=\"cancelEditTodo($event)\"></todo-list></div></div></div></template>"; });
 define('text!resources/elements/todo-action.html', ['module'], function(module) { module.exports = "<template><div><button disabled.bind=\"allTodosCount === 0\" click.trigger=\"removeAllTodosCallback()\">Remove All</button> <button disabled.bind=\"completedTodosCount === 0\" click.trigger=\"removeCompletedTodosCallback()\">Remove Completed</button> <button disabled.bind=\"allTodosCount === 0\" click.trigger=\"toggleAllTodosCallback()\">Toggle All</button> <button disabled.bind=\"allTodosCount === 0\" click.trigger=\"completeAllTodosCallback()\">Complete All</button></div></template>"; });
-define('text!resources/elements/todo-item.html', ['module'], function(module) { module.exports = "<template><li><input type=\"checkbox\" checked.bind=\"todo.completed\"> <input show.bind=\"todo.editMode\" type=\"text\" value.bind=\"todo.title\"> <span show.two-way=\"!todo.editMode\" click.delegate=\"updateCallback(todo)\" class.bind=\"todo.completed ? 'strikeout' : ''\">${todo.id} - ${todo.title}</span><button type=\"button\" click.delegate=\"removeCallback(todo)\">Remove</button> <button type=\"button\" click.delegate=\"updateCallback(todo)\">${todo.editMode ? 'Update' : 'Edit'}</button></li><template></template></template>"; });
-define('text!resources/elements/todo-list.html', ['module'], function(module) { module.exports = "<template><require from=\"./todo-item\"></require><ul><todo-item repeat.for=\"todo of todos\" todo.bind=\"todo\" remove-callback.call=\"removeCallback($event)\" update-callback.call=\"updateCallback($event)\"></todo-item></ul></template>"; });
+define('text!resources/elements/todo-add.html', ['module'], function(module) { module.exports = "<template><require from=\"../attributes/auto-focus\"></require><require from=\"../attributes/keyup-enter\"></require><div class=\"row\"><div class=\"row\"><div class=\"input-field col s1\"><input type=\"checkbox\" checked.bind=\"todoCompleted\" id=\"completed\"><label for=\"completed\"></label></div><div class=\"input-field col s11\"><input type=\"text\" value.bind=\"todoTitle\" auto-focus placeholder=\"what needs to be done?\" keyup-enter.call=\"addCallback({title: todoTitle, completed: todoCompleted})\"></div></div><div class=\"row\"><div class=\"col m12\"><p class=\"right-align\"><button class=\"btn btn-large waves-effect waves-light\" type=\"button\" name=\"action\" click.delegate=\"addCallback({title: todoTitle, completed: todoCompleted})\"><i class=\"material-icons left\">add</i>Add</button></p></div></div></div></template>"; });
+define('text!resources/elements/todo-filter.html', ['module'], function(module) { module.exports = "<template><div class=\"row\"><div class=\"fixed-action-btn\"><a class=\"btn-floating btn-large green\"><i class=\"large material-icons\">filter_list</i></a><ul><li class=\"btn-floating blue waves-effect waves-light\"><a href=\"#!\" class.bind=\"activeFilter === 'all' ? 'active item' : 'item'\" click.trigger=\"filterTodosCallback('all')\"><i class=\"material-icons\">list</i></a></li><li class=\"btn-floating green waves-effect waves-light\"><a href=\"#!\" class.bind=\"activeFilter === 'active' ? 'active item' : 'item'\" click.trigger=\"filterTodosCallback('active')\"><i class=\"material-icons\">view_list</i></a></li><li class=\"btn-floating red waves-effect waves-light\"><a href=\"#!\" class.bind=\"activeFilter === 'completed' ? 'active item' : 'item'\" click.trigger=\"filterTodosCallback('completed')\"><i class=\"material-icons\">playlist_add_check</i></a></li></ul></div></div><div class=\"row center\"><div class=\"col s12\"><ul class=\"tabs\"><li class=\"tab col s3\"><a href=\"#test1\" class.bind=\"activeFilter === 'all' ? 'active item' : 'item'\" click.trigger=\"filterTodosCallback('all')\"><i class=\"material-icons\">list</i>All</a></li><li class=\"tab col s3\"><a href=\"#test2\" class.bind=\"activeFilter === 'active' ? 'active item' : 'item'\" click.trigger=\"filterTodosCallback('active')\"><i class=\"material-icons\">view_list</i>Active</a></li><li class=\"tab col s3\"><a href=\"#test3\" class.bind=\"activeFilter === 'completed' ? 'active item' : 'item'\" click.trigger=\"filterTodosCallback('completed')\"><i class=\"material-icons\">playlist_add_check</i>Completed</a></li></ul></div><div id=\"test1\" class=\"tab col s3\"><i class=\"large material-icons blue\">list</i><div class=\"label blue\"><strong>${allTodosCount}</strong>${allTodosCount === 1 ? ' task ': ' tasks '} </div></div><div id=\"test2\" class=\"tab col s3\"><i class=\"large material-icons green\">view_list</i><div class=\"label green\"><strong>${activeTodosCount}</strong>${activeTodosCount === 1 ? ' task ': ' tasks '} left</div></div><div id=\"test3\" class=\"tab col s3\"><i class=\"large material-icons red\">playlist_add_check</i><div class=\"label red\"><strong>${completedTodosCount}</strong>${completedTodosCount === 1 ? ' task ': ' tasks '} completed</div></div></div></template>"; });
+define('text!resources/elements/todo-item.html', ['module'], function(module) { module.exports = "<template><require from=\"../attributes/auto-focus\"></require><require from=\"../attributes/keyup-enter\"></require><require from=\"../attributes/keyup-esc\"></require><div class=\"row\"><div class=\"input-field col s1\"><i class=\"small left material-icons\">list</i></div><div class=\"input-field col s5\" show.bind=\"!todo.editMode\"><input type=\"checkbox\" checked.bind=\"todo.completed\" id=\"id_${todo.id}\"><label for=\"id_${todo.id}\"><span show.two-way=\"!todo.editMode\" click.delegate=\"updateCallback(todo)\" class.bind=\"todo.completed ? 'red-text strikeout' : 'green-text'\">${todo.id} - ${todo.title}</span></label></div><div class=\"input-field col s5\" show.bind=\"todo.editMode\"><input type=\"text\" value.bind=\"todo.title\" ref=\"todoTextBox\" keyup-enter.call=\"updateCallback(todo)\" keyup-esc.call=\"cancelEditCallback(todo)\"></div><div class=\"input-field col s6\"><button type=\"button\" click.delegate=\"removeCallback(todo)\" class=\"btn btn-medium waves-effect waves-light red\"><i class=\"medium material-icons\">delete</i>Remove</button> <button type=\"button\" click.delegate=\"updateCallback(todo)\" class=\"btn btn-medium waves-effect waves-light blue\"><i class=\"medium material-icons\">edit</i>${todo.editMode ? 'Update' : 'Edit'}</button></div></div><template></template></template>"; });
+define('text!resources/elements/todo-list.html', ['module'], function(module) { module.exports = "<template><require from=\"./todo-item\"></require><todo-item repeat.for=\"todo of todos\" todo.bind=\"todo\" remove-callback.call=\"removeCallback($event)\" update-callback.call=\"updateCallback($event)\" cancel-edit-callback.call=\"cancelEditCallback($event)\"></todo-item></template>"; });
 //# sourceMappingURL=app-bundle.js.map

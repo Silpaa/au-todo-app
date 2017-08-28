@@ -6,6 +6,7 @@ export class TodoList {
   @bindable host;
   @bindable removeCallback;
   @bindable updateCallback;
+  @bindable cancelEditCallback;
   constructor() {}
   activate() {
   }

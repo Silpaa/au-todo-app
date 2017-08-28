@@ -1,12 +1,47 @@
 <template>
-  <div>
-    <a href="#" click.delegate="filterTodosCallback('all')">All</a> |
-    <a href="#" click.delegate="filterTodosCallback('active')">Active</a> |
-    <a href="#" click.delegate="filterTodosCallback('completed')">Completed</a>
-  </div>
-  <div>
-    <strong>${allTodosCount}</strong>${allTodosCount === 1 ? ' task ': ' tasks '} | 
-    <strong>${activeTodosCount}</strong>${activeTodosCount === 1 ? ' task ': ' tasks '} left |
-    <strong>${completedTodosCount}</strong>${completedTodosCount === 1 ? ' task ': ' tasks '} completed
-  </div>
-</template>
+    <div class="row">
+        <div class="fixed-action-btn">
+            <a class="btn-floating btn-large green">
+              <i class="large material-icons">filter_list</i>
+            </a>
+            <ul>
+              <li class="btn-floating blue waves-effect waves-light"><a href="#!" class.bind="activeFilter === 'all' ? 'active item' : 'item'" click.trigger="filterTodosCallback('all')"><i class="material-icons">list</i></a></li>
+              <li class="btn-floating green waves-effect waves-light"><a href="#!" class.bind="activeFilter === 'active' ? 'active item' : 'item'" click.trigger="filterTodosCallback('active')"><i class="material-icons">view_list</i></a></li>
+              <li class="btn-floating red waves-effect waves-light"><a href="#!" class.bind="activeFilter === 'completed' ? 'active item' : 'item'" click.trigger="filterTodosCallback('completed')"><i class="material-icons">playlist_add_check</i></a></li>                    
+            </ul>
+        </div>
+    </div>
+    <div class="row center">
+      <div class="col s12">
+        <ul class="tabs">
+          <li class="tab col s3"><a href="#test1" class.bind="activeFilter === 'all' ? 'active item' : 'item'" click.trigger="filterTodosCallback('all')"><i class="material-icons">list</i>All</a></li>
+          <li class="tab col s3"><a href="#test2" class.bind="activeFilter === 'active' ? 'active item' : 'item'" click.trigger="filterTodosCallback('active')"><i class="material-icons">view_list</i>Active</a></li>
+          <li class="tab col s3"><a href="#test3" class.bind="activeFilter === 'completed' ? 'active item' : 'item'" click.trigger="filterTodosCallback('completed')"><i class="material-icons">playlist_add_check</i>Completed</a></li>
+        </ul>
+      </div>
+      <div id="test1" class="tab col s3">
+        <i class="large material-icons blue">list</i>
+            <div class="label blue">
+              <strong>${allTodosCount}</strong>${allTodosCount === 1 ? ' task ': ' tasks '} 
+            </div>
+      </div>
+      <div id="test2" class="tab col s3">
+        <i class="large material-icons green">view_list</i>
+            <div class="label green">
+              <strong>${activeTodosCount}</strong>${activeTodosCount === 1 ? ' task ': ' tasks '} left
+            </div>  
+      </div>              
+      <div id="test3" class="tab col s3">
+        <i class="large material-icons red">playlist_add_check</i>
+            <div class="label red">
+              <strong>${completedTodosCount}</strong>${completedTodosCount === 1 ? ' task ': ' tasks '} completed
+            </div>
+      </div>
+    </div>
+    <!--<div>
+      <a href="#" click.delegate="filterTodosCallback('all')">All</a> |
+      <a href="#" click.delegate="filterTodosCallback('active')">Active</a> |
+      <a href="#" click.delegate="filterTodosCallback('completed')">Completed</a>
+    </div>-->
+  </template>
+  

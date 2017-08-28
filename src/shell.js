@@ -6,6 +6,7 @@ export class Shell {
     this.appName = 'Todo List';
     this.self = this;
     this.todoTitle = '';
+    this.previousTitle = '';
     this.todoCompleted = false;
     this.activeFilter = 'all';
     this.todoService = new InMemoryTodoPromiseService();
@@ -31,7 +32,6 @@ export class Shell {
   addTodo(todo) {
     this.todoService.addTodo(new Todo(todo.title, todo.completed)).then(addedTodo => {
       this.todoTitle = '';
-      todo.title = '';
       console.log(addedTodo);
       this.todoService.filterTodos(this.activeFilter).then(todos => {
         this.todos = todos;
@@ -55,8 +55,14 @@ export class Shell {
       todo.editMode = false;
       this.todoService.updateTodoById(todo.id, todo);
     } else {
+      this.previousTitle = todo.title;
       todo.editMode = true;
     }
+  }
+
+  cancelEditTodo(todo) {
+    todo.title = this.previousTitle;
+    todo.editMode = false;
   }
 
   checkIfAllTodosAreCompleted() {
