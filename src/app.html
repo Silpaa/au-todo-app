@@ -5,14 +5,21 @@
     <input type="text" placeholder="What would you like to do?" value.bind="todoTitle">
     <button type="submit">Add</button>
   </form>
+  <br><br/>
   <div>
     <a href="#" click.trigger="filterTodos('all')">All</a>
     <a href="#" click.trigger="filterTodos('active')">Active</a>
     <a href="#" click.trigger="filterTodos('completed')">Completed</a>
   </div>
   <div>
+    <strong>${allTodosCount}</strong>${allTodosCount === 1 ? ' task ': ' tasks '} | 
+    <strong>${activeTodosCount}</strong>${activeTodosCount === 1 ? ' task ': ' tasks '} left |
+    <strong>${completedTodosCount}</strong>${completedTodosCount === 1 ? ' task ': ' tasks '} completed
+  </div>
+  <br/>
+  <div>
     <button disabled.bind="allTodosCount === 0" click.trigger="removeAllTodos()"> Remove All</button>
-    <button disabled.bind="completedTodoCount === 0" click.trigger="removeCompletedTodos()"> Remove Completed</button>
+    <button disabled.bind="completedTodosCount === 0" click.trigger="removeCompletedTodos()"> Remove Completed</button>
     <button disabled.bind="allTodosCount === 0" click.trigger="toggleAllTodos()"> Toggle All</button>
     <button disabled.bind="allTodosCount === 0" click.trigger="completeAllTodos()"> Complete All</button>
   </div>

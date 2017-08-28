@@ -1,80 +1,97 @@
 import {Todo} from './models/todo';
-import {InMemoryTodoService} from './services/inmemory-todo-service';
+import {InMemoryTodoPromiseService} from './services/inmemory-todo-promise-service';
 
 export class App {
   constructor() {
     this.appName = 'Todo List';
     this.todoTitle = '';
-    this.todoService = new InMemoryTodoService();
     this.activeFilter = 'all';
+    this.todoService = new InMemoryTodoPromiseService();
     this.filterTodos(this.activeFilter);
   }
-  addTodo() {
-    this.todoService.addTodo(new Todo(this.todoTitle,false));
-    this.todoTitle = '';
-    this.todos = this.todoService.filterTodos(this.activeFilter);
+
+  get allTodosCount() {
+    return this.todoService.filterTodosSync('all').length;
   }
 
-  removeTodo(todo){
-    this.todoService.deleteTodoById(todo.id);
-    this.todos = this.todoService.filterTodos(this.activeFilter);
+  get activeTodosCount() {
+    return this.todoService.filterTodosSync('active').length;
   }
-  filterTodos(filterCriteria){
+
+  get completedTodosCount() {
+    return this.todoService.filterTodosSync('completed').length;
+  }
+
+  filterTodos(filterCriteria) {
     this.activeFilter = filterCriteria;
-    console.log(filterCriteria);
-    this.todos = this.todoService.filterTodos(this.activeFilter);
+    this.todos = this.todoService.filterTodosSync(this.activeFilter);
+  }
+  addTodo() {
+    this.todoService.addTodo(new Todo(this.todoTitle, false)).then(addedTodo => {
+      this.todoTitle = '';
+      console.log(addedTodo);
+      this.todoService.filterTodos(this.activeFilter).then(todos => {
+        this.todos = todos;
+      });
+    });
   }
 
-  getTodosCount(filter){
-    return this.todoService.filterTodos(filter).length;
+  removeTodo(todo) {
+    this.todoService.deleteTodoById(todo.id).then(deletedTodo => {
+      console.log(deletedTodo);
+      this.todoService.filterTodos(this.activeFilter).then(todos => {
+        this.todos = todos;
+      });
+    }).catch(error => {
+      console.log('ERROR: ' + error);
+    });
   }
 
-  get  allTodosCount(){
-    console.log("what is length of allTodosCount "+this.getTodosCount('all'));
-    return this.getTodosCount('all');
-  }
-
-  get completedTodoCount(){
-    console.log("what is length of completedTodoCount "+this.getTodosCount('completed'));
-    return this.getTodosCount('completed');
-  }
-
-  get activeTodosCount(){
-    return this.getTodosCount('active');
-  }
-
-  updateTodo(todo){
-    if(todo.editMode){
-        todo.editMode = false;
-        this.todoService.updateTodoById(todo.id,todo);
+  updateTodo(todo) {
+    if (todo.editMode) {
+      todo.editMode = false;
+      this.todoService.updateTodoById(todo.id, todo).then(updatedTodo => {
+        console.log(updatedTodo);
+      });
     } else {
       todo.editMode = true;
     }
   }
 
-  //wrapper methods
-  checkIfAllTodosAreCompleted(){
+  checkIfAllTodosAreCompleted() {
     return this.todos.every(todo => todo.completed);
   }
 
-  toggleAllTodos(){
-    this.todoService.toggleAllTodos();
-    this.filterTodos(this.activeFilter);
+  toggleAllTodos() {
+    this.todoService.toggleAllTodos().then(result => {
+      if (result) {
+        this.filterTodos(this.activeFilter);
+      }
+    });
   }
 
-  completeAllTodos(){
-    this.todoService.completeAllTodos();
-    this.checkIfAllTodosAreCompleted();
-  }
-  
-  removeAllTodos(){
-    this.todoService.removeAllTodos();
-    this.checkIfAllTodosAreCompleted();
-  }
-
-  removeCompletedTodos(){
-    this.todoService.removeCompletedTodos();
-    this.checkIfAllTodosAreCompleted();
+  completeAllTodos() {
+    this.todoService.completeAllTodos().then(result => {
+      if (result) {
+        this.checkIfAllTodosAreCompleted();
+        this.filterTodos(this.activeFilter);
+      }
+    });
   }
 
+  removeAllTodos() {
+    this.todoService.removeAllTodos().then(result => {
+      if (result) {
+        this.filterTodos(this.activeFilter);
+      }
+    });
+  }
+
+  removeCompletedTodos() {
+    this.todoService.removeCompletedTodos().then(result => {
+      if (result) {
+        this.filterTodos(this.activeFilter);
+      }
+    });
+  }
 }
