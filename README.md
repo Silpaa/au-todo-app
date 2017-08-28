@@ -6,3 +6,4 @@ Using the following features
   3. Custom Attriubutes & custom elements
   4. Styled using google's MaterializeCSS
   5. Promise based service for PouchDB
+  6. Connecting to different routes using Routing
