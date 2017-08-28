@@ -192,7 +192,7 @@ define('main',['exports', './environment'], function (exports, _environment) {
     });
   }
 });
-define('shell',['exports', './models/todo', './services/inmemory-todo-promise-service'], function (exports, _todo, _inmemoryTodoPromiseService) {
+define('shell',['exports', './models/todo', './services/pouchdb-todo-promise-service'], function (exports, _todo, _pouchdbTodoPromiseService) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -234,34 +234,38 @@ define('shell',['exports', './models/todo', './services/inmemory-todo-promise-se
       this.previousTitle = '';
       this.todoCompleted = false;
       this.activeFilter = 'all';
-      this.todoService = new _inmemoryTodoPromiseService.InMemoryTodoPromiseService();
+      this.todoService = new _pouchdbTodoPromiseService.PouchDBTodoPromiseService();
       this.filterTodos(this.activeFilter);
     }
 
     Shell.prototype.filterTodos = function filterTodos(filterCriteria) {
+      var _this = this;
+
       this.activeFilter = filterCriteria;
-      this.todos = this.todoService.filterTodosSync(this.activeFilter);
+      this.todoService.filterTodos(this.activeFilter).then(function (todos) {
+        _this.todos = todos;
+      });
     };
 
     Shell.prototype.addTodo = function addTodo(todo) {
-      var _this = this;
+      var _this2 = this;
 
       this.todoService.addTodo(new _todo.Todo(todo.title, todo.completed)).then(function (addedTodo) {
-        _this.todoTitle = '';
+        _this2.todoTitle = '';
         console.log(addedTodo);
-        _this.todoService.filterTodos(_this.activeFilter).then(function (todos) {
-          _this.todos = todos;
+        _this2.todoService.filterTodos(_this2.activeFilter).then(function (todos) {
+          _this2.todos = todos;
         });
       });
     };
 
     Shell.prototype.removeTodo = function removeTodo(todo) {
-      var _this2 = this;
+      var _this3 = this;
 
       this.todoService.deleteTodoById(todo.id).then(function (deletedTodo) {
         console.log(deletedTodo);
-        _this2.todoService.filterTodos(_this2.activeFilter).then(function (todos) {
-          _this2.todos = todos;
+        _this3.todoService.filterTodos(_this3.activeFilter).then(function (todos) {
+          _this3.todos = todos;
         });
       }).catch(function (error) {
         console.log('ERROR: ' + error);
@@ -290,42 +294,42 @@ define('shell',['exports', './models/todo', './services/inmemory-todo-promise-se
     };
 
     Shell.prototype.toggleAllTodos = function toggleAllTodos() {
-      var _this3 = this;
+      var _this4 = this;
 
       this.todoService.toggleAllTodos().then(function (result) {
         if (result) {
-          _this3.filterTodos(_this3.activeFilter);
-        }
-      });
-    };
-
-    Shell.prototype.completeAllTodos = function completeAllTodos() {
-      var _this4 = this;
-
-      this.todoService.completeAllTodos().then(function (result) {
-        if (result) {
-          _this4.checkIfAllTodosAreCompleted();
           _this4.filterTodos(_this4.activeFilter);
         }
       });
     };
 
-    Shell.prototype.removeAllTodos = function removeAllTodos() {
+    Shell.prototype.completeAllTodos = function completeAllTodos() {
       var _this5 = this;
 
-      this.todoService.removeAllTodos().then(function (result) {
+      this.todoService.completeAllTodos().then(function (result) {
         if (result) {
+          _this5.checkIfAllTodosAreCompleted();
           _this5.filterTodos(_this5.activeFilter);
         }
       });
     };
 
-    Shell.prototype.removeCompletedTodos = function removeCompletedTodos() {
+    Shell.prototype.removeAllTodos = function removeAllTodos() {
       var _this6 = this;
+
+      this.todoService.removeAllTodos().then(function (result) {
+        if (result) {
+          _this6.filterTodos(_this6.activeFilter);
+        }
+      });
+    };
+
+    Shell.prototype.removeCompletedTodos = function removeCompletedTodos() {
+      var _this7 = this;
 
       this.todoService.removeCompletedTodos().then(function (result) {
         if (result) {
-          _this6.filterTodos(_this6.activeFilter);
+          _this7.filterTodos(_this7.activeFilter);
         }
       });
     };
@@ -333,17 +337,17 @@ define('shell',['exports', './models/todo', './services/inmemory-todo-promise-se
     _createClass(Shell, [{
       key: 'allTodosCount',
       get: function get() {
-        return this.todoService.filterTodosSync('all').length;
+        return this.todoService.allTodosCount;
       }
     }, {
       key: 'activeTodosCount',
       get: function get() {
-        return this.todoService.filterTodosSync('active').length;
+        return this.todoService.activeTodosCount;
       }
     }, {
       key: 'completedTodosCount',
       get: function get() {
-        return this.todoService.filterTodosSync('completed').length;
+        return this.todoService.completedTodosCount;
       }
     }]);
 
@@ -1297,6 +1301,270 @@ define('resources/elements/todo-list',['exports', 'aurelia-framework'], function
     enumerable: true,
     initializer: null
   })), _class2)) || _class);
+});
+define('services/pouchdb-todo-promise-service',['exports'], function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  var PouchDBTodoPromiseService = exports.PouchDBTodoPromiseService = function () {
+    function PouchDBTodoPromiseService() {
+      _classCallCheck(this, PouchDBTodoPromiseService);
+
+      this.db = new PouchDB('todos-db', { adapter: 'websql' });
+      this.todos = [];
+      this.latency = 100;
+      this.isRequesting = false;
+      this.completedTodosCount = 0;
+      this.allTodosCount = 0;
+      this.activeTodosCount = 0;
+    }
+
+    PouchDBTodoPromiseService.prototype.getAllTodos = function getAllTodos() {
+      var _this = this;
+
+      this.isRequesting = true;
+      return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          _this.db.allDocs({
+            include_docs: true
+          }).then(function (result) {
+            _this.todos = [];
+            result.rows.forEach(function (todo) {
+              _this.todos.push(todo.doc);
+            });
+            _this.allTodosCount = result.rows.length;
+            _this.activeTodosCount = _this.todos.filter(function (t) {
+              return !t.completed;
+            }).length;
+            _this.completedTodosCount = _this.todos.filter(function (t) {
+              return t.completed;
+            }).length;
+            resolve(true);
+            _this.isRequesting = false;
+          }).catch(function (err) {
+            console.log(err);
+            reject(err);
+          });
+        }, _this.latency);
+      });
+    };
+
+    PouchDBTodoPromiseService.prototype.getTodoById = function getTodoById(id) {
+      var _this2 = this;
+
+      this.isRequesting = true;
+      return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          _this2.db.get(id).then(function (found) {
+            resolve(JSON.parse(JSON.stringify(found)));
+            _this2.isRequesting = false;
+          }).catch(function (err) {
+            console.log(err);
+            reject(err);
+          });
+        }, _this2.latency);
+      });
+    };
+
+    PouchDBTodoPromiseService.prototype.addTodo = function addTodo(todo) {
+      var _this3 = this;
+
+      this.isRequesting = true;
+      return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          todo.id = _this3.todos.length > 0 ? _this3.todos[_this3.todos.length - 1].id + 1 : 1;
+
+          console.log('Next Id: ' + todo.id);
+          todo['_id'] = todo.id.toString();
+          var instance = JSON.parse(JSON.stringify(todo));
+          _this3.db.put(instance).then(function (response) {
+            _this3.isRequesting = false;
+            resolve(instance);
+          }).catch(function (err) {
+            console.log(err);
+            reject(err);
+          });
+        }, _this3.latency);
+      });
+    };
+
+    PouchDBTodoPromiseService.prototype.deleteTodoById = function deleteTodoById(id) {
+      var _this4 = this;
+
+      this.isRequesting = true;
+      return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          _this4.db.get(id.toString()).then(function (deletedTodo) {
+            return _this4.db.remove(deletedTodo);
+          }).then(function (deletedTodo) {
+            _this4.isRequesting = false;
+            resolve(deletedTodo);
+          }).catch(function (ex) {
+            reject(ex);
+          });
+        }, _this4.latency);
+      });
+    };
+
+    PouchDBTodoPromiseService.prototype.updateTodoById = function updateTodoById(id) {
+      var _this5 = this;
+
+      var values = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+      this.isRequesting = true;
+      return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          _this5.db.get(id.toString()).then(function (updatedTodo) {
+            Object.assign(updatedTodo, values);
+            return _this5.db.put(updatedTodo);
+          }).then(function (response) {
+            _this5.isRequesting = false;
+            _this5.db.get(id.toString()).then(function (updatedTodo) {
+              resolve(updatedTodo);
+            });
+          }).catch(function (ex) {
+            reject(ex);
+          });
+        }, _this5.latency);
+      });
+    };
+
+    PouchDBTodoPromiseService.prototype.toggleTodoCompleted = function toggleTodoCompleted(todo) {
+      var _this6 = this;
+
+      this.isRequesting = true;
+      return new Promise(function (resolve) {
+        setTimeout(function () {
+          _this6.updateTodoById(todo.id, { completed: !todo.completed }).then(function (updatedTodo) {
+            _this6.isRequesting = false;
+            resolve(updatedTodo);
+          });
+        }, _this6.latency);
+      });
+    };
+
+    PouchDBTodoPromiseService.prototype.filterTodos = function filterTodos(filterCriteria) {
+      var _this7 = this;
+
+      return this.getAllTodos().then(function (result) {
+        console.log(result);
+
+        return new Promise(function (resolve) {
+          switch (filterCriteria) {
+            case 'active':
+              resolve(_this7.todos.filter(function (t) {
+                return !t.completed;
+              }));
+              break;
+            case 'completed':
+              resolve(_this7.todos.filter(function (t) {
+                return t.completed;
+              }));
+              break;
+            case 'all':
+            default:
+              resolve(_this7.todos);
+              break;
+          }
+        });
+      });
+    };
+
+    PouchDBTodoPromiseService.prototype.toggleAllTodos = function toggleAllTodos() {
+      var _this8 = this;
+
+      this.isRequesting = true;
+      return new Promise(function (resolve) {
+        setTimeout(function () {
+          _this8.todos.forEach(function (t) {
+            return t.completed = !t.completed;
+          });
+          _this8.db.bulkDocs(_this8.todos).then(function (result) {
+            resolve(true);
+            _this8.isRequesting = false;
+          }).catch(function (err) {
+            reject(err);
+          });
+        }, _this8.latency);
+      });
+    };
+
+    PouchDBTodoPromiseService.prototype.completeAllTodos = function completeAllTodos() {
+      var _this9 = this;
+
+      this.isRequesting = true;
+      return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          _this9.todos.forEach(function (t) {
+            return t.completed = true;
+          });
+          _this9.db.bulkDocs(_this9.todos).then(function (result) {
+            resolve(true);
+            _this9.isRequesting = false;
+          }).catch(function (err) {
+            reject(err);
+          });
+        }, _this9.latency);
+      });
+    };
+
+    PouchDBTodoPromiseService.prototype.removeAllTodos = function removeAllTodos() {
+      var _this10 = this;
+
+      this.isRequesting = true;
+      return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          _this10.db.allDocs().then(function (result) {
+            return Promise.all(result.rows.map(function (row) {
+              return _this10.db.remove(row.id, row.value.rev);
+            }));
+          }).then(function () {
+            _this10.todos.splice(0);
+            resolve(true);
+            _this10.isRequesting = false;
+          }).catch(function (err) {
+            reject(err);
+          });
+        }, _this10.latency);
+      });
+    };
+
+    PouchDBTodoPromiseService.prototype.removeCompletedTodos = function removeCompletedTodos() {
+      var _this11 = this;
+
+      this.isRequesting = true;
+      return new Promise(function (resolve) {
+        setTimeout(function () {
+          _this11.tobeDeletedTodos = _this11.todos.filter(function (todo) {
+            return todo.completed;
+          });
+          _this11.tobeDeletedTodos.forEach(function (t) {
+            return t._deleted = true;
+          });
+          _this11.db.bulkDocs(_this11.tobeDeletedTodos).then(function (result) {
+            _this11.todos = _this11.todos.filter(function (todo) {
+              return !todo.completed;
+            });
+            resolve(true);
+            _this11.isRequesting = false;
+          }).catch(function (err) {
+            reject(err);
+          });
+        }, _this11.latency);
+      });
+    };
+
+    return PouchDBTodoPromiseService;
+  }();
 });
 define('text!app.html', ['module'], function(module) { module.exports = "<template><require from=\"../styles/styles.css\"></require><require from=\"./resources/attributes/auto-focus\"></require><h1>${appName}</h1><form method=\"post\" submit.trigger=\"addTodo()\"><input type=\"text\" placeholder=\"What would you like to do?\" value.bind=\"todoTitle\" auto-focus> <button type=\"submit\">Add</button></form><br><br><div><a href=\"#\" click.trigger=\"filterTodos('all')\">All</a> <a href=\"#\" click.trigger=\"filterTodos('active')\">Active</a> <a href=\"#\" click.trigger=\"filterTodos('completed')\">Completed</a></div><div><strong>${allTodosCount}</strong>${allTodosCount === 1 ? ' task ': ' tasks '} | <strong>${activeTodosCount}</strong>${activeTodosCount === 1 ? ' task ': ' tasks '} left | <strong>${completedTodosCount}</strong>${completedTodosCount === 1 ? ' task ': ' tasks '} completed</div><br><div><button disabled.bind=\"allTodosCount === 0\" click.trigger=\"removeAllTodos()\">Remove All</button> <button disabled.bind=\"completedTodosCount === 0\" click.trigger=\"removeCompletedTodos()\">Remove Completed</button> <button disabled.bind=\"allTodosCount === 0\" click.trigger=\"toggleAllTodos()\">Toggle All</button> <button disabled.bind=\"allTodosCount === 0\" click.trigger=\"completeAllTodos()\">Complete All</button></div><ul><li repeat.for=\"t of todos\"><input type=\"checkbox\" checked.bind=\"t.completed\"> <input show.bind=\"t.editMode\" type=\"text\" value.bind=\"t.title\"> <span show.two-way=\"!t.editMode\" click.trigger=\"updateTodo(t)\" class.bind=\"t.completed ? 'strikeout': ''\">${t.id} -${t.title}</span><button type=\"button\" click.trigger=\"removeTodo(t)\">Remove</button> <button type=\"button\" click.trigger=\"updateTodo(t)\">${t.editMode ? 'Update' : 'Edit'}</button></li></ul></template>"; });
 define('text!../styles/styles.css', ['module'], function(module) { module.exports = ".strikeout {\n  text-decoration: line-through; }\n"; });

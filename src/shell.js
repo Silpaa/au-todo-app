@@ -1,5 +1,5 @@
 import {Todo} from './models/todo';
-import {InMemoryTodoPromiseService} from './services/inmemory-todo-promise-service';
+import {PouchDBTodoPromiseService} from './services/pouchdb-todo-promise-service';
 
 export class Shell {
   constructor() {
@@ -9,24 +9,26 @@ export class Shell {
     this.previousTitle = '';
     this.todoCompleted = false;
     this.activeFilter = 'all';
-    this.todoService = new InMemoryTodoPromiseService();
+    this.todoService = new PouchDBTodoPromiseService();
     this.filterTodos(this.activeFilter);
   }
   get allTodosCount() {
-    return this.todoService.filterTodosSync('all').length;
+    return this.todoService.allTodosCount;
   }
 
   get activeTodosCount() {
-    return this.todoService.filterTodosSync('active').length;
+    return this.todoService.activeTodosCount;
   }
 
   get completedTodosCount() {
-    return this.todoService.filterTodosSync('completed').length;
+    return this.todoService.completedTodosCount;
   }
 
   filterTodos(filterCriteria) {
     this.activeFilter = filterCriteria;
-    this.todos = this.todoService.filterTodosSync(this.activeFilter);
+    this.todoService.filterTodos(this.activeFilter).then(todos => {
+      this.todos = todos;
+    });
   }
 
   addTodo(todo) {
