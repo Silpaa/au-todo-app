@@ -5,3 +5,4 @@ Using the following features
   2. CSS Preprocessors
   3. Custom Attriubutes & custom elements
   4. Styled using google's MaterializeCSS
+  5. Promise based service for PouchDB
