@@ -1,5 +1,5 @@
 # au-todo-app
-This Application leverages the features of Aurelia framework.
+This Application leverages the features of Aurelia framework.(HTML,CSS,Aurelia,POUCHDB,ROUTING,PUB/SUB)
 Using the following features
   1. Promises
   2. CSS Preprocessors
